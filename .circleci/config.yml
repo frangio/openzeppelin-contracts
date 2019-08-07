@@ -92,6 +92,6 @@ workflows:
       - test:
           requires:
             - build
-      - coverage:
-          requires:
-            - build
+      # - coverage:
+      #     requires:
+      #       - build
