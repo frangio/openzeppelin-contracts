@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
 
+import "../../gsn/Context.sol";
 import "../../math/SafeMath.sol";
 import "./FinalizableCrowdsale.sol";
 import "../../payment/escrow/RefundEscrow.sol";

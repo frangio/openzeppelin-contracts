@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
 
+import "../gsn/Context.sol";
 import "../access/roles/SignerRole.sol";
 import "../cryptography/ECDSA.sol";
 
