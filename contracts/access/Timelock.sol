@@ -16,10 +16,10 @@ import "./AccessControl.sol";
  * By default, this contract is self administered, meaning administration tasks
  * have to go through the timelock process. The proposer (resp executor) role
  * is in charge of proposing (resp executing) operations. A common use case is
- * to position this {TimelockController} as the owner of a smart contract, with
+ * to position this {Timelock} as the owner of a smart contract, with
  * a multisig or a DAO as the sole proposer.
  */
-contract TimelockController is AccessControl {
+contract Timelock is AccessControl {
 
     bytes32 public constant TIMELOCK_ADMIN_ROLE = keccak256("TIMELOCK_ADMIN_ROLE");
     bytes32 public constant PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
@@ -82,7 +82,7 @@ contract TimelockController is AccessControl {
      * this role for everyone.
      */
     modifier onlyRole(bytes32 role) {
-        require(hasRole(role, _msgSender()) || hasRole(role, address(0)), "TimelockController: sender requires permission");
+        require(hasRole(role, _msgSender()) || hasRole(role, address(0)), "Timelock: sender requires permission");
         _;
     }
 
@@ -169,8 +169,8 @@ contract TimelockController is AccessControl {
      * - the caller must have the 'proposer' role.
      */
     function scheduleBatch(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas, bytes32 predecessor, bytes32 salt, uint256 delay) public virtual onlyRole(PROPOSER_ROLE) {
-        require(targets.length == values.length, "TimelockController: length mismatch");
-        require(targets.length == datas.length, "TimelockController: length mismatch");
+        require(targets.length == values.length, "Timelock: length mismatch");
+        require(targets.length == datas.length, "Timelock: length mismatch");
 
         bytes32 id = hashOperationBatch(targets, values, datas, predecessor, salt);
         _schedule(id, delay);
@@ -183,8 +183,8 @@ contract TimelockController is AccessControl {
      * @dev Schedule an operation that is to becomes valid after a given delay.
      */
     function _schedule(bytes32 id, uint256 delay) private {
-        require(_timestamps[id] == 0, "TimelockController: operation already scheduled");
-        require(delay >= _minDelay, "TimelockController: insufficient delay");
+        require(_timestamps[id] == 0, "Timelock: operation already scheduled");
+        require(delay >= _minDelay, "Timelock: insufficient delay");
         // solhint-disable-next-line not-rely-on-time
         _timestamps[id] = SafeMath.add(block.timestamp, delay);
     }
@@ -197,7 +197,7 @@ contract TimelockController is AccessControl {
      * - the caller must have the 'proposer' role.
      */
     function cancel(bytes32 id) public virtual onlyRole(PROPOSER_ROLE) {
-        require(isOperationPending(id), "TimelockController: operation cannot be cancelled");
+        require(isOperationPending(id), "Timelock: operation cannot be cancelled");
         delete _timestamps[id];
 
         emit Cancelled(id);
@@ -229,8 +229,8 @@ contract TimelockController is AccessControl {
      * - the caller must have the 'executor' role.
      */
     function executeBatch(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas, bytes32 predecessor, bytes32 salt) public payable virtual onlyRole(EXECUTOR_ROLE) {
-        require(targets.length == values.length, "TimelockController: length mismatch");
-        require(targets.length == datas.length, "TimelockController: length mismatch");
+        require(targets.length == values.length, "Timelock: length mismatch");
+        require(targets.length == datas.length, "Timelock: length mismatch");
 
         bytes32 id = hashOperationBatch(targets, values, datas, predecessor, salt);
         _beforeCall(predecessor);
@@ -244,14 +244,14 @@ contract TimelockController is AccessControl {
      * @dev Checks before execution of an operation's calls.
      */
     function _beforeCall(bytes32 predecessor) private view {
-        require(predecessor == bytes32(0) || isOperationDone(predecessor), "TimelockController: missing dependency");
+        require(predecessor == bytes32(0) || isOperationDone(predecessor), "Timelock: missing dependency");
     }
 
     /**
      * @dev Checks after execution of an operation's calls.
      */
     function _afterCall(bytes32 id) private {
-        require(isOperationReady(id), "TimelockController: operation is not ready");
+        require(isOperationReady(id), "Timelock: operation is not ready");
         _timestamps[id] = _DONE_TIMESTAMP;
     }
 
@@ -263,7 +263,7 @@ contract TimelockController is AccessControl {
     function _call(bytes32 id, uint256 index, address target, uint256 value, bytes calldata data) private {
         // solhint-disable-next-line avoid-low-level-calls
         (bool success,) = target.call{value: value}(data);
-        require(success, "TimelockController: underlying transaction reverted");
+        require(success, "Timelock: underlying transaction reverted");
 
         emit CallExecuted(id, index, target, value, data);
     }
@@ -274,7 +274,7 @@ contract TimelockController is AccessControl {
      * Emits a {MinDelayChange} event.
      */
     function updateDelay(uint256 newDelay) external virtual {
-        require(msg.sender == address(this), "TimelockController: caller must be timelock");
+        require(msg.sender == address(this), "Timelock: caller must be timelock");
         emit MinDelayChange(_minDelay, newDelay);
         _minDelay = newDelay;
     }
