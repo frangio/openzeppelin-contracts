@@ -648,7 +648,9 @@ contract AccessManager is Context, Multicall, IAccessManager {
         bytes32 operationId = hashOperation(caller, target, data);
         uint32 nonce;
 
-        if (setback != 0) {
+        // If this operation has been scheduled before, consume it regardless of the current setback.
+        // Expiration logic is handled by `getSchedule`.
+        if (setback != 0 || getSchedule(operationId) > 0) {
             nonce = _consumeScheduledOp(operationId);
         }
 
