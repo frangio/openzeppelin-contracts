@@ -315,7 +315,7 @@ abstract contract Governor is Context, ERC165, EIP712, IGovernor, IERC721Receive
         bytes[] memory calldatas,
         bytes32 descriptionHash
     ) public payable virtual override returns (uint256) {
-        uint256 proposalId = hashProposal(targets, values, calldatas, descriptionHash);
+        uint256 proposalId = getProposalId(targets, values, calldatas, descriptionHash);
 
         ProposalState status = state(proposalId);
         require(
