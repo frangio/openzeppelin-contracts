@@ -178,17 +178,10 @@ library ERC7579Utils {
         unchecked {
             uint256 bufferLength = executionCalldata.length;
 
-            // Check executionCalldata is not empty.
-            if (bufferLength < 32) revert ERC7579DecodingError();
-
-            // Get the offset of the array (pointer to the array length).
+            // Get the offset of the array (pointer to the array length). Bounds checked by Solidity.
             uint256 arrayLengthOffset = uint256(bytes32(executionCalldata[0:32]));
 
-            // The array length (at arrayLengthOffset) should be 32 bytes long. We check that this is within the
-            // buffer bounds. Since we know bufferLength is at least 32, we can subtract with no overflow risk.
-            if (arrayLengthOffset > bufferLength - 32) revert ERC7579DecodingError();
-
-            // Get the array length. arrayLengthOffset + 32 is bounded by bufferLength so it does not overflow.
+            // Get the array length. Bounds checked by Solidity, and overflow results in invalid bounds.
             uint256 arrayLength = uint256(bytes32(executionCalldata[arrayLengthOffset:arrayLengthOffset + 32]));
 
             // Check that the buffer is long enough to store the array elements as "offset pointer":
